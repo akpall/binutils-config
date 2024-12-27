@@ -21,6 +21,7 @@ trap ":" INT QUIT TSTP
 
 argv0=${0##*/}
 FUNCTIONS_SH="${BROOT}/lib/gentoo/functions.sh"
+# shellcheck disable=SC1090
 source ${FUNCTIONS_SH} || {
 	echo "${argv0}: Could not source ${FUNCTIONS_SH}!" 1>&2
 	exit 1
@@ -111,6 +112,7 @@ atomic_ln() {
 
 setup_env() {
 	unset TARGET VER LIBPATH
+	# shellcheck disable=SC1090
 	source "${ENV_D}/${PROFILE}"
 	if [[ -z ${TARGET} ]] ; then
 		eerror "${PROFILE} is invalid (no \$TARGET defined) :("
@@ -353,6 +355,7 @@ set_current_profile() {
 		return 1
 	fi
 
+	# shellcheck disable=SC1090
 	source "${ENV_D}/config-${TARGET}"
 
 	if [[ -z ${CURRENT} ]] ; then
@@ -392,6 +395,7 @@ list_profiles() {
 		[[ -f ${x} ]] || continue
 		[[ ${x} == */config-* ]] && continue
 
+		# shellcheck disable=SC1090
 		source "${x}"
 		if [[ ${target} != "${TARGET}" ]] ; then
 			[[ -n ${target} ]] && echo
@@ -400,6 +404,7 @@ list_profiles() {
 
 		x=${x##*/}
 		if [[ -e ${ENV_D}/config-${TARGET} ]] ; then
+			# shellcheck disable=SC1090
 			source "${ENV_D}/config-${TARGET}"
 			if [[ ${VER} == "${CURRENT}" ]] ; then
 				[[ ${TARGET} == "${HOST}" ]] \
