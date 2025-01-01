@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright 1999-2023 Gentoo Authors
+# Copyright 1999-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 # Format of /etc/env.d/binutils/:
@@ -20,6 +20,7 @@ cd "${BROOT}/" || die "Could not cd into $BROOT"
 trap ":" INT QUIT TSTP
 
 argv0=${0##*/}
+
 FUNCTIONS_SH="${BROOT}/lib/gentoo/functions.sh"
 # shellcheck disable=SC1090
 source ${FUNCTIONS_SH} || {
@@ -27,10 +28,12 @@ source ${FUNCTIONS_SH} || {
 	exit 1
 }
 esyslog() { :; }
+
 die() {
 	eerror "${argv0}: $*"
 	exit 1
 }
+
 umask 022
 
 # *BSD SED does not work as-is, use GNU SED. TODO: find details.
@@ -69,7 +72,7 @@ USAGE_END
 # Returns paths ordered by version from olders to newest.
 # We use the following hack: assume the input containst digits only in places of versions
 # Normalizer:
-#    echo "hello-world-1.2.3.444.56778" | ${SED} -e 's/[0-9]\+/0000&/g' | ${SED} -e 's/0*\([0-9]\{4\}\)/\1/g'
+#    echo "hello-world-1.2.3.444.56778" | ${SED} -e 's/[0-9]\+/0000&/g' -e 's/0*\([0-9]\{4\}\)/\1/g'
 #    hello-world-0001.0002.0003.0444.56778
 # That way we can have 9.0 < 10.0 order.
 # TODO: explore how portable 'sort -V' is and try using that instead.
@@ -79,8 +82,8 @@ version_sorted_paths() {
 		# TODO: avoid -r
 		mangled_v=$(
 			printf "%s" "${p}" |
-				${SED} -e 's/[0-9]\+/0000&/g' |
-				${SED} -e 's/0*\([0-9]\{4\}\)/\1/g'
+				${SED} -e 's/[0-9]\+/0000&/g' \
+					-e 's/0*\([0-9]\{4\}\)/\1/g'
 		)
 		printf "%s %s\n" "${mangled_v}" "${p}"
 	done | LANG=C sort | $SED -e 's/^.* //g'
@@ -455,12 +458,10 @@ USE_NATIVE_LINKS="@USE_NATIVE_LINKS@"
 unset UARG
 
 select_action() {
-	if [[ ${NEED_ACTION} != "no" ]]; then
-		NEED_ACTION="no"
-		DOIT=$1
-	else
-		die "one action at a time!"
-	fi
+	[[ ${NEED_ACTION} == "no" ]] && die "one action at a time!"
+
+	NEED_ACTION="no"
+	DOIT=$1
 }
 
 while [[ $# -gt 0 ]]; do
