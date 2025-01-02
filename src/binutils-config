@@ -70,23 +70,39 @@ USAGE_END
 
 # Usage: version_sorted_paths <CHOST>
 # Returns paths ordered by version from olders to newest.
-# We use the following hack: assume the input containst digits only in places of versions
-# Normalizer:
-#    echo "hello-world-1.2.3.444.56778" | ${SED} -e 's/[0-9]\+/0000&/g' -e 's/0*\([0-9]\{4\}\)/\1/g'
-#    hello-world-0001.0002.0003.0444.56778
-# That way we can have 9.0 < 10.0 order.
-# TODO: explore how portable 'sort -V' is and try using that instead.
 version_sorted_paths() {
-	local p mangled_v
+	local p
+	local version_parts=0
+	local versions=()
 	for p in "$@"; do
-		# TODO: avoid -r
-		mangled_v=$(
-			printf "%s" "${p}" |
-				${SED} -e 's/[0-9]\+/0000&/g' \
-					-e 's/0*\([0-9]\{4\}\)/\1/g'
-		)
-		printf "%s %s\n" "${mangled_v}" "${p}"
-	done | LANG=C sort | $SED -e 's/^.* //g'
+		local split
+		IFS='-' read -ra split <<<"${p}"
+
+		local version=${split[-1]}
+		versions+=("${version}")
+
+		local version_split
+		IFS='.' read -ra version_split <<<"${version}"
+
+		local tmp="${#version_split[@]}"
+		[[ ${tmp} -gt ${version_parts} ]] && version_parts=${tmp}
+	done
+
+	local sort_parameters=("-t.")
+	for p in $(seq 1 "$version_parts"); do
+		sort_parameters+=("-k${p},${p}n")
+	done
+
+	local sorted_versions
+	sorted_versions=$(
+		for p in "${versions[@]}"; do
+			echo "${p}"
+		done | LC_ALL=C sort "${sort_parameters[@]}"
+	)
+
+	for p in "${sorted_versions[@]}"; do
+		echo "${ENV_D}/${HOST}-${p}"
+	done
 }
 
 mv_if_diff() {
