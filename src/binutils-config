@@ -15,7 +15,7 @@ BROOT="@GENTOO_EPREFIX@"
 EROOT="${ROOT%/}${EPREFIX}/"
 export PORTAGE_CONFIGROOT="${EROOT}"
 
-cd "${BROOT}/"
+cd "${BROOT}/" || die "Could not cd into $BROOT"
 
 trap ":" INT QUIT TSTP
 
